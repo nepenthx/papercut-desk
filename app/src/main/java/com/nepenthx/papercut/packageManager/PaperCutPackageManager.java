@@ -3,11 +3,12 @@ package com.nepenthx.papercut.packageManager;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
-import com.nepenthx.myapplication.R;
+import com.nepenthx.papercut.PaperCutConfig;
 import com.nepenthx.papercut.executor.AsyncExecutor;
 
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ public class PaperCutPackageManager {
      */
     private  Context contextProxy ;
 
-    private final PackageManagerConfig config= new PackageManagerConfig();
 
     private PackageManager pm;
 
@@ -50,7 +50,7 @@ public class PaperCutPackageManager {
 
 
     public void init(Context context) {
-        config.init();
+
         this.contextProxy=context;
         pm = context.getPackageManager();
         this.initAllApp();
@@ -64,7 +64,9 @@ public class PaperCutPackageManager {
         appList = pm.getInstalledPackages(0);
 
             for (PackageInfo packageInfo : appList) {
-                appInfoList.add(new AppInfo(packageInfo));
+                if((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
+                    appInfoList.add(new AppInfo(packageInfo));
+                }
         }
         AsyncExecutor.execute(new Runnable() {
             @Override
@@ -74,7 +76,7 @@ public class PaperCutPackageManager {
                 }
             }
         });
-        if (config.isDebug()) {
+        if (PaperCutConfig.instance.isDebug()) {
             StringBuilder stringBuilder = new StringBuilder();
             for (PackageInfo packageInfo : appList) {
                 stringBuilder.append(packageInfo.packageName).append(", ");
@@ -110,7 +112,7 @@ public class PaperCutPackageManager {
         try {
             if (pm != null) {
                 Intent intent = pm.getLaunchIntentForPackage(packageInfo.packageName);
-                if (config.isDebug()) {
+                if (PaperCutConfig.instance.isDebug()) {
                     Log.d(TAG, "Intent to package: " + packageInfo.packageName);
                 }
                 if (intent != null) {
